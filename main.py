@@ -83,16 +83,26 @@ def getRandom(seed, rounds, intermediate=None):
     if rounds == 0:
         return intermediate
 
-    k = bytes([1] * 32)
-    v = intermediate if intermediate is not None else bytes([0] * 32)
+    k = intermediate if intermediate is not None else bytes([0] * 32)
+    v = intermediate if intermediate is not None else bytes([1] * 32)
 
     k = hmac.new(k, (v + bytes([0]) + bytes(seed.encode())), hashlib.sha256).digest()
     v = hmac.new(k, v, hashlib.sha256).digest()
 
+    reseed_counter = len(str(seed)) + 52
+
+    w = hmac.new(k, (v + bytes([2]) + bytes(getEntropy().encode())), hashlib.sha256).digest()
+    v = bytes(int.from_bytes(v + w) % random.randint(1, 10))
+
+    h = hmac.new(k, v + bytes([3]), hashlib.sha256).digest()
+    v = bytes(int.from_bytes(v + h + bytes([reseed_counter])) % random.randint(1, 10))
+
     output = hmac.new(k, v, hashlib.sha256)
     v = output.digest()
+    v = bytes(int.from_bytes(v + bytes([1])) % random.randint(1, 10))
 
     new_seed = getSeed(getEntropy())
+
     return getRandom(new_seed, rounds-1, v)
 
 seed = getSeed(getEntropy())
