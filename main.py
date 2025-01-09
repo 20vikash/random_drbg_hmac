@@ -4,6 +4,7 @@ import psutil # type:ignore
 import hashlib
 import random
 import hmac
+import os
 
 try:
     from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetTemperature, nvmlShutdown # type:ignore
@@ -71,23 +72,31 @@ def getEntropy():
     
     return metrics["hashed_metrics"]
 
-a = 1103515245
-c = 12345
-m = 2**31
+def getSeed(entropy):
+    nonce = os.urandom(32).hex()
+    personal = "ISRO"
 
-def getRandom(seed, rounds, interMediate=None):
+    seed = entropy + nonce + personal
+    return seed
+
+def getRandom(seed, rounds, intermediate=None):
     if rounds == 0:
-        return interMediate
+        return intermediate
 
-    seed_int = int(hashlib.sha256(seed.encode()).hexdigest(), 16) % m
-    interMediate = interMediate if interMediate is not None else seed_int
+    k = bytes([1] * 32)
+    v = intermediate if intermediate is not None else bytes([0] * 32)
 
-    random_value = (a * interMediate + seed_int + c) % m
-    new_seed = getEntropy()
+    k = hmac.new(k, (v + bytes([0]) + bytes(seed.encode())), hashlib.sha256).digest()
+    v = hmac.new(k, v, hashlib.sha256).digest()
 
-    return getRandom(new_seed, rounds=rounds-1, interMediate=random_value)
+    output = hmac.new(k, v, hashlib.sha256)
+    v = output.digest()
 
-seed = getEntropy()
+    new_seed = getSeed(getEntropy())
+    return getRandom(new_seed, rounds-1, v)
 
-random_ = getRandom(seed, 10)
-print(random_)
+seed = getSeed(getEntropy())
+
+random = getRandom(seed, 10)
+rh = hashlib.sha256(random).hexdigest()
+print(rh)
