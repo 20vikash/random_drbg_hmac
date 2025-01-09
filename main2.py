@@ -77,6 +77,10 @@ def getSeed(entropy):
     personal = "ISRO"
 
     seed = entropy + nonce + personal
+    print("Seed:",seed)
+    print("Nonce:",nonce)
+    print("Personal:",personal)
+    print("Entrophy:",entropy)
     return seed
 
 def getRandom(seed, rounds, intermediate=None):
@@ -102,6 +106,7 @@ def getRandom(seed, rounds, intermediate=None):
     v = v + bytes([1])
 
     new_seed = getSeed(getEntropy())
+    print(new_seed)
 
     return getRandom(new_seed, rounds-1, v)
 
