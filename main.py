@@ -4,7 +4,6 @@ import psutil # type:ignore
 import hashlib
 import random
 import hmac
-import os
 
 try:
     from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetTemperature, nvmlShutdown # type:ignore
