@@ -106,6 +106,6 @@ def getRandom(seed, rounds, intermediate=None):
 
 seed = getSeed(getEntropy())
 
-random = getRandom(seed, 10)
+random = getRandom(seed, 2)
 rh = hashlib.sha256(random).hexdigest()
 print(rh)
