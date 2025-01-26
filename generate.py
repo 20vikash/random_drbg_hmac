@@ -1,6 +1,6 @@
 import subprocess
 
-command = ["sudo", "python3", "main.py"]
+command = ["sudo", "python3", "unmod.py"]
 
 for i in range(20):
     print(f"Running process {i + 1}...")
