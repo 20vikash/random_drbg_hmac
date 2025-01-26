@@ -20,6 +20,20 @@ try:
 except:
     gpu_temperature = None  # Fallback if GPU metrics are unavailable
 
+def get_process_entropy():
+    processes = psutil.process_iter(attrs=['pid', 'name', 'status', 'cpu_percent', 'memory_info'])
+    
+    entropy_data = []
+    
+    for proc in processes:
+        try:
+            proc_info = str(proc.info)
+            entropy_data.append(proc_info)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    
+    return ''.join(entropy_data)
+
 def getEntropy():
     # Hardware Metrics
     metrics = {}
@@ -69,6 +83,7 @@ def getEntropy():
     
     # Random Hardware Events
     metrics["hardware_entropy"] = secrets.token_bytes(32).hex()
+    metrics["processes"] = get_process_entropy()
     
     # Combine Metrics for Hashing
     combined_data = ''.join(str(value) for value in metrics.values())
@@ -119,6 +134,11 @@ def generate(count):
         f.write(sha256_hash)
 
 
-for i in range(800):
+threads = []
+for i in range(500):
     thread = threading.Thread(target=lambda: generate(i+1))
+    threads.append(thread)
     thread.start()
+
+for thread in threads:
+    thread.join()
